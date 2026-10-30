@@ -60,3 +60,8 @@
 .paper-contact a { color: #245987; font-weight: 700; text-decoration: underline; text-underline-offset: 1px; }
 .paper-project-links a { color: #245987; font-weight: 700; text-decoration: underline; text-underline-offset: 1px; }
 @media (max-width: 600px) { .resume-template-control { align-items: flex-start; flex-direction: column; }.resume-template-control select { width: 100%; max-width: none; }.resume-checker-heading { align-items: flex-start; flex-direction: column; gap: 4px; } }
+.builder-brand-button { padding: 0; border: 0; background: transparent; cursor: pointer; }
+.builder-brand-button:disabled { opacity: .65; cursor: wait; }
+.editor-bottom-save > div { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+.editor-bottom-save .editor-save-only { border: 1px solid #dce5dc; color: #526b58; background: #fff; }
+@media (max-width: 600px) { .editor-bottom-save { align-items: flex-start; flex-direction: column; }.editor-bottom-save > div { width: 100%; }.editor-bottom-save > div button { flex: 1; justify-content: center; padding: 0 8px; font-size: 9px; } }

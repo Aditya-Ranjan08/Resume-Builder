@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { AlertCircle, ArrowDownToLine, Check, CheckCircle2, Eye, FileText, Plus, Save, Search, Sparkles, Trash2 } from "lucide-react";
+import { AlertCircle, ArrowDownToLine, ArrowLeft, Check, CheckCircle2, Eye, FileText, Plus, Save, Search, Sparkles, Trash2 } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import api from "../api";
 import { cleanProjectText, experiencePeriod, formatGrade, formatSkills, resumeUrlDisplay, safeResumeUrl, uniqueResumeItems, uniqueStrings } from "../utils/resumeFormat";
@@ -81,6 +81,10 @@ export default function ResumeEditor() {
     }
   };
 
+  const saveAndReturn = async () => {
+    if (await save()) navigate("/dashboard");
+  };
+
   const openPreview = async () => {
     if (await save()) navigate(`/resume/${id}/preview`);
   };
@@ -104,7 +108,7 @@ export default function ResumeEditor() {
     <main className="builder-page">
       <Toaster richColors position="top-right" />
       <header className="builder-topbar">
-        <Link className="builder-brand" to="/dashboard"><span className="builder-brand-mark"><FileText size={17} /></span>folio<span>.</span></Link>
+        <button className="builder-brand builder-brand-button" type="button" onClick={saveAndReturn} disabled={saving}><span className="builder-brand-mark"><FileText size={17} /></span>folio<span>.</span></button>
         <div className="builder-doc-title"><span className="builder-doc-icon"><FileText size={15} /></span><span>{resume.name || "Untitled resume"}</span><i /> <small>{saving ? "Saving…" : "Draft"}</small></div>
         <div className="builder-top-actions"><button className="builder-new-btn" onClick={createAnother} disabled={creating}><Plus size={15} /><span>{creating ? "Creating…" : "New resume"}</span></button><button className="builder-preview-btn" onClick={openPreview} disabled={saving}><Eye size={16} /><span>Preview & export</span></button><button className="builder-save-btn" onClick={save} disabled={saving}><Save size={15} /><span>{saving ? "Saving…" : "Save changes"}</span></button></div>
       </header>
@@ -160,7 +164,7 @@ export default function ResumeEditor() {
               <AddEntry onClick={() => addItem("certifications", "")}>Add certification</AddEntry>
             </EditorSection>
           </div>
-          <div className="editor-bottom-save"><span><Check size={14} />Your edits appear in the preview instantly</span><button onClick={save} disabled={saving}><Save size={15} />{saving ? "Saving…" : "Save resume"}</button></div>
+          <div className="editor-bottom-save"><span><Check size={14} />Your edits appear in the preview instantly</span><div><button className="editor-save-only" onClick={save} disabled={saving}><Save size={15} />{saving ? "Saving…" : "Save changes"}</button><button onClick={saveAndReturn} disabled={saving}><ArrowLeft size={15} />{saving ? "Saving…" : "Save & return to resumes"}</button></div></div>
         </section>
 
         <aside className={`builder-preview-pane ${mobilePane === "preview" ? "mobile-active" : "mobile-hidden"}`}>
