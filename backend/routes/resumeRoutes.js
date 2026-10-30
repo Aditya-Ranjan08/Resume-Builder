@@ -1,15 +1,30 @@
 import express from "express";
+import mongoose from "mongoose";
 import Resume from "../models/Resume.js";
 import { auth } from "../middleware/auth.js";
 
 const router = express.Router();
+const resumeFields = [
+  "name", "email", "phone", "address", "linkedin", "github", "portfolio", "headline", "summary",
+  "skills", "meta", "education", "experiences", "projects", "achievements", "certifications",
+];
+
+const resumePayload = (body = {}) => {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return {};
+  return Object.fromEntries(
+    resumeFields
+      .filter((field) => Object.prototype.hasOwnProperty.call(body, field))
+      .map((field) => [field, body[field]])
+  );
+};
 
 /* ================= PUBLIC RESUME ================= */
 
 
 router.get("/public/:id", async (req, res) => {
   try {
-    const resume = await Resume.findById(req.params.id);
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ msg: "Invalid resume id." });
+    const resume = await Resume.findById(req.params.id).select("-user");
 
     if (!resume) {
       return res.status(404).json({
@@ -34,7 +49,7 @@ router.get("/", auth, async (req, res) => {
   try {
     const resumes = await Resume.find({
       user: req.userId,
-    }).sort({
+    }).select("-user").sort({
       updatedAt: -1,
     });
 
@@ -53,10 +68,11 @@ router.get("/", auth, async (req, res) => {
 
 router.get("/:id", auth, async (req, res) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ msg: "Invalid resume id." });
     const resume = await Resume.findOne({
       _id: req.params.id,
       user: req.userId,
-    });
+    }).select("-user");
 
     if (!resume) {
       return res.status(404).json({
@@ -79,10 +95,7 @@ router.get("/:id", auth, async (req, res) => {
 
 router.post("/", auth, async (req, res) => {
   try {
-    const payload = {
-      ...req.body,
-      user: req.userId,
-    };
+    const payload = { ...resumePayload(req.body), user: req.userId };
 
     const created = await Resume.create(payload);
 
@@ -101,19 +114,24 @@ router.post("/", auth, async (req, res) => {
 
 router.put("/:id", auth, async (req, res) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ msg: "Invalid resume id." });
 
-    console.log("BODY:", req.body);
+    const payload = resumePayload(req.body);
+    if (!Object.keys(payload).length) {
+      return res.status(400).json({ msg: "No resume fields were provided." });
+    }
 
     const updated = await Resume.findOneAndUpdate(
       {
         _id: req.params.id,
         user: req.userId,
       },
-      req.body,
+      { $set: payload },
       {
         new: true,
+        runValidators: true,
       }
-    );
+    ).select("-user");
 
     if (!updated) {
       return res.status(404).json({
@@ -136,6 +154,7 @@ router.put("/:id", auth, async (req, res) => {
 
 router.delete("/:id", auth, async (req, res) => {
   try {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ msg: "Invalid resume id." });
 
     const deleted = await Resume.findOneAndDelete({
       _id: req.params.id,

@@ -1,12 +1,12 @@
-import React from "react";
+import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import ResumeEditor from "./pages/ResumeEditor";
-import ResumePreview from "./pages/ResumePreview";
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const ResumeEditor = lazy(() => import("./pages/ResumeEditor"));
+const ResumePreview = lazy(() => import("./pages/ResumePreview"));
 
 function App() {
   const isAuth = !!localStorage.getItem("token");
@@ -42,25 +42,28 @@ function App() {
 />
 
       {/* ROUTES */}
-      <Routes>
-        <Route
-          path="/"
-          element={isAuth ? <Navigate to="/dashboard" /> : <Login />}
-        />
-        <Route path="/register" element={<Register />} />
-        <Route
-          path="/dashboard"
-          element={isAuth ? <Dashboard /> : <Navigate to="/" />}
-        />
-        <Route
-          path="/resume/:id/edit"
-          element={isAuth ? <ResumeEditor /> : <Navigate to="/" />}
-        />
-        <Route
-          path="/resume/:id/preview"
-          element={isAuth ? <ResumePreview /> : <Navigate to="/" />}
-        />
-      </Routes>
+      <Suspense fallback={<div className="route-loading" role="status">Loading Folio…</div>}>
+        <Routes>
+          <Route
+            path="/"
+            element={isAuth ? <Navigate to="/dashboard" replace /> : <Login />}
+          />
+          <Route path="/register" element={isAuth ? <Navigate to="/dashboard" replace /> : <Register />} />
+          <Route
+            path="/dashboard"
+            element={isAuth ? <Dashboard /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/resume/:id/edit"
+            element={isAuth ? <ResumeEditor /> : <Navigate to="/" replace />}
+          />
+          <Route
+            path="/resume/:id/preview"
+            element={isAuth ? <ResumePreview /> : <Navigate to="/" replace />}
+          />
+          <Route path="*" element={<Navigate to={isAuth ? "/dashboard" : "/"} replace />} />
+        </Routes>
+      </Suspense>
     </>
   );
 }

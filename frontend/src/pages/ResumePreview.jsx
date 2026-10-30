@@ -3,8 +3,7 @@ import { ArrowLeft, Download, FileText, LoaderCircle } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { toast, Toaster } from "sonner";
 import api from "../api";
-import { ResumePaper } from "./ResumeEditor";
-import { downloadResumePdf } from "../utils/resumePdf";
+import ResumePaper from "./ResumePaper";
 import "./ResumePreview.css";
 
 export default function ResumePreview() {
@@ -28,8 +27,9 @@ export default function ResumePreview() {
 
   useEffect(() => { loadResume(); }, [loadResume]);
 
-  const downloadPDF = () => {
+  const downloadPDF = async () => {
     try {
+      const { downloadResumePdf } = await import("../utils/resumePdf");
       downloadResumePdf(resume);
       toast.success("Your resume PDF is downloading.");
     } catch {

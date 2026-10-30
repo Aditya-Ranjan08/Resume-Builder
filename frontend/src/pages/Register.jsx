@@ -40,7 +40,7 @@ export default function Register() {
         </label>
         <label className="auth-field">
           <span>Password</span>
-          <span className="auth-input-wrap"><LockKeyhole size={17} /><input type={showPassword ? "text" : "password"} autoComplete="new-password" placeholder="Create a password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} required /><button className="password-toggle" type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></span>
+          <span className="auth-input-wrap"><LockKeyhole size={17} /><input type={showPassword ? "text" : "password"} autoComplete="new-password" minLength={8} placeholder="Create a password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} required /><button className="password-toggle" type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></span>
           <small className="auth-hint">Use a password you don’t use elsewhere.</small>
         </label>
         <button className="auth-submit" type="submit" disabled={isSubmitting}>{isSubmitting ? <><span className="auth-spinner" />Creating account…</> : <>Create account <MoveRight size={17} /></>}</button>

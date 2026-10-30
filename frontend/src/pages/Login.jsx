@@ -22,7 +22,6 @@ export default function Login() {
       localStorage.setItem("user", JSON.stringify(data.user));
       toast.success("Welcome back!");
       navigate("/dashboard");
-      window.location.reload();
     } catch (err) {
       const message = err.response?.data?.msg || "Unable to sign in. Please try again.";
       setError(message);

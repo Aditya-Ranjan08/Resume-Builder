@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, BriefcaseBusiness, Clock3, FileText, GraduationCap, LoaderCircle, Plus, RotateCw, Sparkles, Trash2, X } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, ChevronDown, Clock3, FileText, GraduationCap, KeyRound, LoaderCircle, LogOut, Plus, RotateCw, Sparkles, Trash2, X } from "lucide-react";
+import toast from "react-hot-toast";
 import api from "../api";
 import "./Dashboard.css";
 
@@ -34,9 +35,31 @@ export default function Dashboard() {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(false);
   const [error, setError] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [accountDialog, setAccountDialog] = useState("");
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const profileMenuRef = useRef(null);
   const user = useMemo(() => {
     try { return JSON.parse(localStorage.getItem("user") || "{}"); }
     catch { return {}; }
+  }, []);
+
+  useEffect(() => {
+    const closeMenuOnOutsideClick = (event) => {
+      if (!profileMenuRef.current?.contains(event.target)) setProfileMenuOpen(false);
+    };
+    const closeMenuOnEscape = (event) => {
+      if (event.key === "Escape") setProfileMenuOpen(false);
+    };
+
+    document.addEventListener("pointerdown", closeMenuOnOutsideClick);
+    document.addEventListener("keydown", closeMenuOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeMenuOnOutsideClick);
+      document.removeEventListener("keydown", closeMenuOnEscape);
+    };
   }, []);
 
   const loadResumes = useCallback(async () => {
@@ -86,13 +109,61 @@ export default function Dashboard() {
     }
   };
 
+  const openAccountDialog = (dialog) => {
+    setProfileMenuOpen(false);
+    setAccountDialog(dialog);
+    setPasswordError("");
+    setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  };
+
+  const changePassword = async (event) => {
+    event.preventDefault();
+    setPasswordError("");
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError("New passwords do not match.");
+      return;
+    }
+
+    setPasswordSaving(true);
+    try {
+      await api.put("/auth/change-password", {
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
+      setAccountDialog("");
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      toast.success("Password changed successfully.");
+    } catch (err) {
+      setPasswordError(err.response?.data?.msg || "Couldn’t change your password. Please try again.");
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/");
+  };
+
   const firstName = String(user.name || "there").trim().split(/\s+/)[0];
 
   return (
     <main className="resume-home">
       <header className="home-topbar">
         <Link className="home-brand" to="/dashboard"><span className="home-brand-icon"><FileText size={18} /></span>folio<span>.</span></Link>
-        <div className="home-user"><span className="home-user-avatar">{String(user.name || "U").trim().slice(0, 1).toUpperCase()}</span><span>{user.name || "My profile"}</span></div>
+        <div className="home-profile" ref={profileMenuRef}>
+          <button className="home-user" type="button" aria-haspopup="menu" aria-expanded={profileMenuOpen} onClick={() => setProfileMenuOpen((open) => !open)}>
+            <span className="home-user-avatar">{String(user.name || "U").trim().slice(0, 1).toUpperCase()}</span>
+            <span>{user.name || "My profile"}</span>
+            <ChevronDown size={14} className={profileMenuOpen ? "home-user-chevron is-open" : "home-user-chevron"} />
+          </button>
+          {profileMenuOpen && <div className="home-profile-menu" role="menu">
+            <div className="home-profile-menu-user"><strong>{user.name || "My profile"}</strong>{user.email && <span>{user.email}</span>}</div>
+            <button type="button" role="menuitem" onClick={() => openAccountDialog("password")}><KeyRound size={15} />Change password</button>
+            <button type="button" role="menuitem" className="home-profile-logout" onClick={() => openAccountDialog("logout")}><LogOut size={15} />Log out</button>
+          </div>}
+        </div>
       </header>
 
       <section className="home-content">
@@ -124,6 +195,14 @@ export default function Dashboard() {
         </section>
       </section>
       {resumeToDelete && <div className="delete-dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !deleting) setResumeToDelete(null); }}><section className="delete-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-resume-title"><button className="delete-dialog-close" type="button" onClick={() => setResumeToDelete(null)} disabled={deleting} aria-label="Close delete confirmation"><X size={17} /></button><span className="delete-dialog-icon"><Trash2 size={19} /></span><h2 id="delete-resume-title">Delete this resume?</h2><p><strong>{resumeToDelete.name?.trim() || "Untitled resume"}</strong> will be permanently removed from your workspace.</p>{deleteError && <p className="delete-dialog-error" role="alert">Couldn’t delete this resume. Please try again.</p>}<div><button type="button" className="delete-cancel-btn" onClick={() => setResumeToDelete(null)} disabled={deleting}>Keep resume</button><button type="button" className="delete-confirm-btn" onClick={deleteResume} disabled={deleting}><Trash2 size={14} />{deleting ? "Deleting…" : "Delete resume"}</button></div></section></div>}
+      {accountDialog === "logout" && <div className="delete-dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setAccountDialog(""); }}><section className="delete-dialog" role="dialog" aria-modal="true" aria-labelledby="logout-title"><button className="delete-dialog-close" type="button" onClick={() => setAccountDialog("")} aria-label="Close logout confirmation"><X size={17} /></button><span className="delete-dialog-icon"><LogOut size={19} /></span><h2 id="logout-title">Log out?</h2><p>Are you sure you want to log out of your account?</p><div><button type="button" className="delete-cancel-btn" onClick={() => setAccountDialog("")}>Cancel</button><button type="button" className="delete-confirm-btn" onClick={logout}><LogOut size={14} />Log out</button></div></section></div>}
+      {accountDialog === "password" && <div className="delete-dialog-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !passwordSaving) setAccountDialog(""); }}><section className="account-dialog" role="dialog" aria-modal="true" aria-labelledby="change-password-title"><button className="delete-dialog-close" type="button" onClick={() => setAccountDialog("")} disabled={passwordSaving} aria-label="Close change password dialog"><X size={17} /></button><span className="delete-dialog-icon account-dialog-icon"><KeyRound size={19} /></span><h2 id="change-password-title">Change password</h2><p>Enter your current password and choose a new one.</p><form onSubmit={changePassword}>
+        <label>Current password<input type="password" autoComplete="current-password" value={passwordForm.currentPassword} onChange={(event) => setPasswordForm({ ...passwordForm, currentPassword: event.target.value })} required /></label>
+        <label>New password<input type="password" autoComplete="new-password" minLength={8} value={passwordForm.newPassword} onChange={(event) => setPasswordForm({ ...passwordForm, newPassword: event.target.value })} required /><small>Use at least 8 characters.</small></label>
+        <label>Confirm new password<input type="password" autoComplete="new-password" minLength={8} value={passwordForm.confirmPassword} onChange={(event) => setPasswordForm({ ...passwordForm, confirmPassword: event.target.value })} required /></label>
+        {passwordError && <p className="delete-dialog-error" role="alert">{passwordError}</p>}
+        <div><button type="button" className="delete-cancel-btn" onClick={() => setAccountDialog("")} disabled={passwordSaving}>Cancel</button><button type="submit" className="password-save-btn" disabled={passwordSaving}><KeyRound size={14} />{passwordSaving ? "Saving…" : "Update password"}</button></div>
+      </form></section></div>}
     </main>
   );
 }
