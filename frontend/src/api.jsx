@@ -3,7 +3,9 @@ import axios from "axios";
 
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
-  "https://resume-builder-6fja.onrender.com/api";
+  (import.meta.env.DEV
+    ? "http://localhost:5000/api"
+    : "https://resume-builder-6fja.onrender.com/api");
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -36,7 +38,9 @@ api.interceptors.response.use(
     const message =
       error.response?.data?.msg ||
       error.response?.data?.message ||
-      "Something went wrong";
+      (error.response
+        ? "Something went wrong"
+        : "Cannot reach the backend. Make sure it is running on port 5000.");
 
     console.error("API ERROR:", message);
 

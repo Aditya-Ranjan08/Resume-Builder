@@ -1,6 +1,7 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import User from "../models/User.js";
 
 const router = express.Router();
@@ -9,12 +10,23 @@ const router = express.Router();
 
 router.post("/register", async (req, res) => {
   try {
-
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
         msg: "Missing fields",
+      });
+    }
+
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({
+        msg: "Database is not connected. Check the backend terminal and MONGO_URI.",
+      });
+    }
+
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({
+        msg: "JWT_SECRET is missing from backend/.env.",
       });
     }
 
@@ -33,8 +45,6 @@ router.post("/register", async (req, res) => {
       email,
       passwordHash,
     });
-
-    console.log(" USER SAVED:", newUser);
 
     const token = jwt.sign(
       {
@@ -57,11 +67,13 @@ router.post("/register", async (req, res) => {
     });
 
   } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({ msg: "An account with this email already exists." });
+    }
 
-    console.log("REGISTER ERROR:", err);
-
+    console.error("REGISTER ERROR:", err.name, err.code || "");
     res.status(500).json({
-      msg: "Server error",
+      msg: "Registration failed. Check the backend terminal for the error details.",
     });
   }
 });

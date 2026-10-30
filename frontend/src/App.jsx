@@ -56,7 +56,10 @@ function App() {
           path="/resume/:id/edit"
           element={isAuth ? <ResumeEditor /> : <Navigate to="/" />}
         />
-        <Route path="/resume/:id/preview" element={<ResumePreview />} />
+        <Route
+          path="/resume/:id/preview"
+          element={isAuth ? <ResumePreview /> : <Navigate to="/" />}
+        />
       </Routes>
     </>
   );
