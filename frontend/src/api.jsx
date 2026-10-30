@@ -1,5 +1,6 @@
 
 import axios from "axios";
+import { notifyAuthStateChange } from "./authState";
 
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
@@ -47,7 +48,8 @@ api.interceptors.response.use(
     // optional: auto logout on 401
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
-      window.location.href = "/";
+      localStorage.removeItem("user");
+      notifyAuthStateChange();
     }
 
     return Promise.reject(error);

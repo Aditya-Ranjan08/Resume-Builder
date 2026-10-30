@@ -3,6 +3,7 @@ import { Eye, EyeOff, LockKeyhole, Mail, MoveRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import api from "../api";
+import { notifyAuthStateChange } from "../authState";
 import AuthLayout from "./AuthLayout";
 
 export default function Login() {
@@ -20,6 +21,7 @@ export default function Login() {
       const { data } = await api.post("/auth/login", form);
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+      notifyAuthStateChange();
       toast.success("Welcome back!");
       navigate("/dashboard");
     } catch (err) {

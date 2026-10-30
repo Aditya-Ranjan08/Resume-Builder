@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, BriefcaseBusiness, ChevronDown, Clock3, FileText, GraduationCap, KeyRound, LoaderCircle, LogOut, Plus, RotateCw, Sparkles, Trash2, X } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../api";
+import { notifyAuthStateChange } from "../authState";
 import "./Dashboard.css";
 
 const blankResume = {
@@ -143,6 +144,7 @@ export default function Dashboard() {
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    notifyAuthStateChange();
     navigate("/");
   };
 

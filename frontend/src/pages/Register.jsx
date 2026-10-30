@@ -3,6 +3,7 @@ import { Eye, EyeOff, LockKeyhole, Mail, MoveRight, UserRound } from "lucide-rea
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import api from "../api";
+import { notifyAuthStateChange } from "../authState";
 import AuthLayout from "./AuthLayout";
 
 export default function Register() {
@@ -18,6 +19,7 @@ export default function Register() {
       const { data } = await api.post("/auth/register", form);
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+      notifyAuthStateChange();
       toast.success("Your account is ready!");
       navigate("/dashboard");
     } catch (err) {

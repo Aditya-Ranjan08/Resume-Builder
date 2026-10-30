@@ -1,6 +1,7 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import { AUTH_STATE_EVENT } from "./authState";
 
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
@@ -9,7 +10,17 @@ const ResumeEditor = lazy(() => import("./pages/ResumeEditor"));
 const ResumePreview = lazy(() => import("./pages/ResumePreview"));
 
 function App() {
-  const isAuth = !!localStorage.getItem("token");
+  const [isAuth, setIsAuth] = useState(() => !!localStorage.getItem("token"));
+
+  useEffect(() => {
+    const syncAuthState = () => setIsAuth(!!localStorage.getItem("token"));
+    window.addEventListener(AUTH_STATE_EVENT, syncAuthState);
+    window.addEventListener("storage", syncAuthState);
+    return () => {
+      window.removeEventListener(AUTH_STATE_EVENT, syncAuthState);
+      window.removeEventListener("storage", syncAuthState);
+    };
+  }, []);
 
   return (
     <>
