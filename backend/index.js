@@ -59,10 +59,21 @@ app.get("/", (req, res) => {
 /* ================= START SERVER ================= */
 
 if (process.env.VERCEL !== "1") {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
+  const PORT = process.env.PORT || 5001;
+  const server = app.listen(PORT, () => {
     console.log(`Server running on ${PORT}`);
     connectToMongoDB().then(() => console.log("MongoDB connected")).catch((error) => console.error("MongoDB connection error:", error.message));
+  });
+
+  server.on("error", (error) => {
+    if (error.code === "EADDRINUSE") {
+      console.error(`Port ${PORT} is already in use. Set PORT to an available port.`);
+      process.exitCode = 1;
+      return;
+    }
+
+    console.error("Server failed to start:", error);
+    process.exitCode = 1;
   });
 }
 

@@ -5,7 +5,7 @@ import { notifyAuthStateChange } from "./authState";
 const API_BASE =
   import.meta.env.VITE_API_BASE ||
   (import.meta.env.DEV
-    ? "http://localhost:5000/api"
+    ? "http://localhost:5001/api"
     : "https://resume-builder-6fja.onrender.com/api");
 
 const api = axios.create({
@@ -41,7 +41,7 @@ api.interceptors.response.use(
       error.response?.data?.message ||
       (error.response
         ? "Something went wrong"
-        : "Cannot reach the backend. Make sure it is running on port 5000.");
+        : "Cannot reach the backend. Make sure it is running on port 5001.");
 
     console.error("API ERROR:", message);
 
